@@ -3,7 +3,7 @@ module.exports = {
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "next/core-web-vitals",
-    "prettier" // This disables rules in presets that conflict with prettier (or other formatters).
+    "prettier", // This disables rules in presets that conflict with prettier (or other formatters).
   ],
   parser: "@typescript-eslint/parser",
   parserOptions: {
@@ -14,4 +14,4 @@ module.exports = {
   },
   plugins: ["@typescript-eslint"],
   root: true,
-}
+};
