@@ -1,40 +1,89 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Helix Webdev Config
 
-## Getting Started
+One-stop shop for a modern web dev setup with Helix, using Typescript + ESLint + Prettier/dprint.
 
-First, run the development server:
+It took me some time to figure out how to set up Helix for webdev correctly after the merge of [Multi-LSP support with #2507](https://github.com/helix-editor/helix/pull/2507). While going through various configs that I found online, I was also never sure if things didn't work because of my Helix config or because of how the project was set up.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+This particular setup uses dprint as its formatter but switching to Prettier is easily done, see below.
+
+## Prerequisites
+For completeness' sake and because it's never mentioned anywhere else, here are all the langservers you need to have installed.
+
+### Language Servers
+Install the [`typescript-language-server`](https://github.com/typescript-language-server/typescript-language-server). This is used by default by Helix.
+```
+npm install -g typescript-language-server typescript
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The [`vscode-langservers-extracted`](https://github.com/hrsh7th/vscode-langservers-extracted) package provides language servers for Html, CSS, Json and ESLint.
+```
+npm i -g vscode-langservers-extracted
+```
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+I'm also using [`emmet-ls`](https://github.com/aca/emmet-ls) for convenience:
+```
+npm install -g emmet-ls
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+### Formatters
+#### dprint
+We all know that a tool being written in Rust is enough reason for any true Rustacean to immediately switch over to it so in my personal setup I'm using [dprint](https://dprint.dev/install/) as my formatter:
+```
+curl -fsSL https://dprint.dev/install.sh | sh
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+#### Prettier
+If you want to go for the canonical Typescript + ESLint + Prettier setup, install [Prettier](https://prettier.io/docs/en/install.html) (globally or locally) and comment/uncomment a few lines in the `.helix/languages.toml` file.
+```
+npm i -g prettier
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Bonus: Just use Deno?
+For my personal projects, I'm currently exploring simply using Deno for both linting and formatting as I like its defaults and the simplicity of using just one langserver.
+```
+curl -fsSL https://deno.land/x/install/install.sh | sh
+```
+Here's how the `languages.toml` looks like for that:
+```
+[language-server]
+deno = { command = "deno", args = [ "lsp" ]}
 
-## Learn More
+[[language]]
+name = "tsx"
+language-servers = [ "deno", "emmet-ls" ]
+auto-format = true
+```
 
-To learn more about Next.js, take a look at the following resources:
+# Helix Setup
+Have a look at the [`languages.toml`](.helix/languages.toml) for the full Helix config.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Project Setup
+I'm using a [NextJS starter project](https://nextjs.org/docs/getting-started/installation) just to have something in hand and show off a correctly configured project.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Here's what I did to create the project.
+```
+npx create-next-app@latest helix-webdev-config
+```
 
-## Deploy on Vercel
+Add [`typescript-eslint`](https://typescript-eslint.io/getting-started) to add full Typescript support.
+```
+npm i -D @typescript-eslint/parser @typescript-eslint/eslint-plugin eslint typescript
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Exclude pure formatting lints from eslint. Formatting is a [different concern than linting](https://prettier.io/docs/en/comparison) and [should be handled separately](https://typescript-eslint.io/linting/troubleshooting/formatting).
+```
+npm i -D eslint-config-prettier
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+To quote directly from the above:
+
+_Note that even if you use a formatter other than prettier, you can use eslint-config-prettier as it exclusively turns **off** all formatting rules._
+
+When you open a file and save it, you should now see the formatter in action. To format the whole project, run:
+```
+dprint fmt
+```
+
+## Note on `efm-langserver`
+I saw a few a few setups using `efm-langserver` for linting/formatting with ESLint + Prettier.
+ I _think_ these can be regarded as deprecated and superseded by usage of an `vscode-eslint-language-server` and the newly added `formatter` option which appears to give better performance and a more straight-forward way of setting things up.
